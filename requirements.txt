@@ -1,0 +1,17 @@
+# =============================================================================
+# REQUIREMENTS.TXT - Desembarcos Flota Vasca (Streamlit Cloud)
+# =============================================================================
+# Python 3.12
+# Última actualización: Febrero 2026
+# =============================================================================
+
+# Manipulación de datos
+pandas>=2.2.0
+numpy>=1.26.0
+pyarrow>=15.0.0
+
+# Visualización
+plotly>=5.18.0
+
+# Aplicación web
+streamlit>=1.31.0
