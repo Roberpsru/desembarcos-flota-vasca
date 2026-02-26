@@ -324,8 +324,9 @@ def cargar_datos():
     for ruta in rutas_posibles:
         if os.path.exists(ruta):
             df = pd.read_parquet(ruta)
+            # Convertir Año_int a int normal (no nullable) para evitar problemas de memoria
             if 'Año_int' in df.columns:
-                df['Año_int'] = df['Año_int'].astype('Int64')
+                df['Año_int'] = df['Año_int'].fillna(0).astype(int)
             return df
     
     st.error("❌ Ez da datu-fitxategia aurkitu / No se encontró el fichero de datos")
@@ -357,30 +358,31 @@ def cargar_estadisticas():
 def aplicar_filtros(df, años, territorios, puertos, segmentos, especies, establecimientos, buques):
     """Aplica los filtros seleccionados al DataFrame."""
     
-    df_filtrado = df.copy()
+    # Crear máscara booleana en lugar de copiar el dataframe
+    mask = pd.Series([True] * len(df), index=df.index)
     
     if años and len(años) > 0:
-        df_filtrado = df_filtrado[df_filtrado['Año_int'].isin(años)]
+        mask &= df['Año_int'].isin(años)
     
     if territorios and len(territorios) > 0:
-        df_filtrado = df_filtrado[df_filtrado['Censo_PueBasTH2'].isin(territorios)]
+        mask &= df['Censo_PueBasTH2'].isin(territorios)
     
     if puertos and len(puertos) > 0:
-        df_filtrado = df_filtrado[df_filtrado['Puerto base'].isin(puertos)]
+        mask &= df['Puerto base'].isin(puertos)
     
     if segmentos and len(segmentos) > 0:
-        df_filtrado = df_filtrado[df_filtrado['Censo_Segmento'].isin(segmentos)]
+        mask &= df['Censo_Segmento'].isin(segmentos)
     
     if especies and len(especies) > 0:
-        df_filtrado = df_filtrado[df_filtrado['Especie - Nombre comercial'].isin(especies)]
+        mask &= df['Especie - Nombre comercial'].isin(especies)
     
     if establecimientos and len(establecimientos) > 0:
-        df_filtrado = df_filtrado[df_filtrado['Establecimiento venta - Nombre'].isin(establecimientos)]
+        mask &= df['Establecimiento venta - Nombre'].isin(establecimientos)
     
     if buques and len(buques) > 0:
-        df_filtrado = df_filtrado[df_filtrado['Nombre buque'].isin(buques)]
+        mask &= df['Nombre buque'].isin(buques)
     
-    return df_filtrado
+    return df[mask]
 
 
 def obtener_opciones(df, columna, filtro_previo=None):
@@ -1781,11 +1783,11 @@ with tab6:
         | Parametroa / Parámetro | Balioa / Valor |
         |------------------------|----------------|
         | **Aldia / Periodo** | 2018 - 2025 (8 urte / años) |
-        | **Erregistro guztiak / Registros totales** | {stats.get('total_registros', 0):,} |
-        | **Ontzi bakarrak / Buques únicos** | {stats.get('buques_unicos', 0)} |
-        | **Espezieak / Especies** | {stats.get('especies_unicas', 0)} |
-        | **Pisu totala / Peso total** | {stats.get('peso_total', 0)/1e6:.1f} M Kg |
-        | **Fakturazio totala / Facturación total** | {stats.get('facturacion_total', 0)/1e6:.1f} M € |
+        | **Erregistro guztiak / Registros totales** | {stats.get('registros_totales', 'N/A'):,} |
+        | **Ontzi bakarrak / Buques únicos** | {stats.get('buques_unicos', 'N/A')} |
+        | **Espezieak / Especies** | {stats.get('especies_unicas', 'N/A')} |
+        | **Pisu totala / Peso total** | {stats.get('peso_total_kg', 0)/1e6:.1f} M Kg |
+        | **Fakturazio totala / Facturación total** | {stats.get('facturacion_total_eur', 0)/1e6:.1f} M € |
         """)
     
     with col2:
